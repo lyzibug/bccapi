@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+   <project name="BCCAPI" default="all" basedir=".">
+      <property name="src.dir"     location="${basedir}/src" />
+      <property name="build.dir"     location="${basedir}/build" />
+      <property name="jar.dir"     location="${build.dir}/jar" />
+      <property name="classes.dir" location="${build.dir}/classes" />
+      <property name="doc.dir"     location="${build.dir}/doc" />
+      <path id="common.classpath">
+      </path>
+   	
+      <target name="bccapi-jar" depends="bccapi">
+         <mkdir dir="${jar.dir}" />
+         <jar destfile="${jar.dir}/bccapi.jar" basedir="${classes.dir}"  >
+            <fileset dir="${classes.dir}">
+                <include name="**/*.class"/>
+                <exclude name="com/bccapi/example/SimpleClient.class"/>
+            </fileset>
+            <manifest>
+               <attribute name="Main-Class" value="com.bccapi.example.SimpleClient"/>
+            </manifest>
+         </jar>
+      </target>
+
+      <target name="bccapi">
+         <mkdir dir="${classes.dir}" />
+         <javac srcdir="${src.dir}" 
+         	    destdir="${classes.dir}" 
+         	    classpathref="common.classpath" 
+         	    fork="true" 
+         	    failonerror="true" 
+         	    optimize="true" 
+         	    includeantruntime="false"/>
+      </target>
+   	
+   	<target name="javadoc" depends="bccapi">
+       <mkdir dir="${doc.dir}" />
+   	   <javadoc
+   	      excludepackagenames="org.test.supercsv.mock"
+   	      access="public"
+   	      destdir="${doc.dir}"
+   	      author="true"
+   	      version="true"
+   	      use="true"
+   	      windowtitle="BCCAPI">
+          <fileset dir="${src.dir}" defaultexcludes="yes">
+             <include name="**/*.java"/>
+   	      </fileset>
+   	   </javadoc>
+   	</target>   	
+   	
+   	<target name="all" depends="bccapi-jar,javadoc"/>
+   	
+   	<target name="clean">
+       <delete dir="${build.dir}"/>
+   	</target>
+   	
+   </project>

@@ -1,0 +1,11 @@
+To get started install Ant and the latest JDK (tested with JDK 1.6.0_26). 
+
+Run "ant clean all" to compile bccapi.jar and the java docs.
+
+To run the SimpleClient on the test network: 
+java -jar build/jar/bccapi.jar testnet
+
+To run the SimpleClient on the production network: 
+java -jar build/jar/bccapi.jar prodnet
+
+Latest info available at http://code.google.com/p/bccapi/
