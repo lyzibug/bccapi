@@ -19,7 +19,9 @@ package com.bccapi.core;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.SecureRandom;
 
+import com.bccapi.api.Network;
 import com.bouncycastle.asn1.DERInteger;
 import com.bouncycastle.asn1.DERSequenceGenerator;
 import com.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -34,8 +36,8 @@ import com.bouncycastle.crypto.signers.ECDSASigner;
  */
 public class PrivateECKey {
 
-   private final BigInteger _privateKey;
-   private final PublicECKey _publicKey;
+   protected final BigInteger _privateKey;
+   protected final PublicECKey _publicKey;
 
    /**
     * Create a private key based on a PRNG.
@@ -43,7 +45,7 @@ public class PrivateECKey {
     * @param randomSource
     *           The PRNG to use.
     */
-   public PrivateECKey(PRNG randomSource) {
+   public PrivateECKey(SecureRandom randomSource) {
       ECKeyGenerationParameters params = new ECKeyGenerationParameters(PublicECKey.ecParams, randomSource);
       ECKeyPairGenerator generator = new ECKeyPairGenerator();
       generator.init(params);
@@ -52,6 +54,63 @@ public class PrivateECKey {
       _privateKey = privParams.getD();
       ECPublicKeyParameters pubParams = (ECPublicKeyParameters) keypair.getPublic();
       _publicKey = new PublicECKey(pubParams.getQ().getEncoded());
+   }
+
+   /**
+    * Construct from private key bytes
+    * 
+    * @param bytes
+    *           The private key as an array of bytes
+    */
+   public PrivateECKey(byte[] bytes) {
+      if (bytes.length != 32) {
+         throw new IllegalArgumentException("The length of the array of bytes must be 32");
+      }
+      byte[] keyBytes = new byte[33];
+      System.arraycopy(bytes, 0, keyBytes, 1, 32);
+      _privateKey = new BigInteger(bytes);
+      _publicKey = new PublicECKey(PublicECKey.ecParams.getG().multiply(_privateKey).getEncoded());
+   }
+
+   /**
+    * Construct from a base58 encoded key and a bitcoin network
+    * 
+    * @param base58Encoded
+    *           The base58 encoded private key
+    * @param network
+    *           The network that this key should be for
+    * @throws IllegalArgumentException
+    *            If this is not a valid base58 encoded key for the specified
+    *            network
+    */
+   public PrivateECKey(String base58Encoded, Network network) {
+      byte[] bytes = Base58.decodeChecked(base58Encoded);
+      if (bytes == null) {
+         throw new IllegalArgumentException("The base58 encoded key is invalid");
+      }
+      if (bytes.length != 33) {
+         throw new IllegalArgumentException("The length of the base58 encoded key is invalid");
+      }
+      if (network == Network.productionNetwork && bytes[0] != (byte) 0x80) {
+         throw new IllegalArgumentException("The the base58 encoded key is not for the botcoin production network");
+      }
+      if (network == Network.testNetwork && bytes[0] != (byte) 0xEF) {
+         throw new IllegalArgumentException("The the base58 encoded key is not for the botcoin test network");
+      }
+      bytes[0] = 0;
+      _privateKey = new BigInteger(bytes);
+      _publicKey = new PublicECKey(PublicECKey.ecParams.getG().multiply(_privateKey).getEncoded());
+   }
+
+   /**
+    * Copy constructor
+    * 
+    * @param key
+    *           The key to copy
+    */
+   public PrivateECKey(PrivateECKey key) {
+      _privateKey = key._privateKey;
+      _publicKey = key._publicKey;
    }
 
    /**

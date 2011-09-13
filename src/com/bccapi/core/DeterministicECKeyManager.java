@@ -17,6 +17,7 @@
 package com.bccapi.core;
 
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ import java.util.Map;
  */
 public class DeterministicECKeyManager implements ECKeyManager {
 
-   private PRNG _prng;
+   private SecureRandom _prng;
    List<PrivateECKey> _privateKeys;
    Map<PublicECKey, Integer> _publicKeyMap;
 
@@ -42,7 +43,7 @@ public class DeterministicECKeyManager implements ECKeyManager {
     */
    public DeterministicECKeyManager(byte[] seed) {
       try {
-         _prng = new PRNG(seed);
+         _prng = new HmacPRNG(seed);
       } catch (NoSuchAlgorithmException e) {
          // This never happens
          throw new RuntimeException("Unable to create PRNG");
@@ -79,7 +80,7 @@ public class DeterministicECKeyManager implements ECKeyManager {
       return new ECSigner(this, index);
    }
 
-   private PrivateECKey getPrivateKey(int index) {
+   protected PrivateECKey getPrivateKey(int index) {
       if (index > _privateKeys.size() - 1) {
          generateKeysForIndex(index);
       }

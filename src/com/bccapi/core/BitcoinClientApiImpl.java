@@ -52,8 +52,8 @@ public class BitcoinClientApiImpl implements BitcoinClientAPI {
    @Override
    public byte[] getLoginChallenge(byte[] accountPublicKey) throws APIException, IOException {
       try {
-         String options = "?key="+HexUtils.toHex(accountPublicKey);
-         HttpURLConnection connection = getHttpConnection("getLoginChallenge",options, null);
+         String options = "?key=" + HexUtils.toHex(accountPublicKey);
+         HttpURLConnection connection = getHttpConnection("getLoginChallenge", options, null);
          connection.setRequestMethod("GET");
          connection.connect();
          int status = connection.getResponseCode();
@@ -70,8 +70,8 @@ public class BitcoinClientApiImpl implements BitcoinClientAPI {
    public String login(byte[] accountPublicKey, byte[] challengeResponse) throws APIException, IOException {
       try {
          String responseString = HexUtils.toHex(challengeResponse);
-         String options = "?key="+HexUtils.toHex(accountPublicKey);
-         HttpURLConnection connection = getHttpConnection("login",options, null);
+         String options = "?key=" + HexUtils.toHex(accountPublicKey);
+         HttpURLConnection connection = getHttpConnection("login", options, null);
          connection.setRequestMethod("GET");
          connection.setRequestProperty("response", responseString);
          connection.connect();
@@ -89,7 +89,7 @@ public class BitcoinClientApiImpl implements BitcoinClientAPI {
    @Override
    public AccountInfo getAccountInfo(String sessionId) throws APIException, IOException {
       try {
-         HttpURLConnection connection = getHttpConnection("getAccountInfo","", sessionId);
+         HttpURLConnection connection = getHttpConnection("getAccountInfo", "", sessionId);
          connection.setRequestMethod("GET");
          connection.connect();
          int status = connection.getResponseCode();
@@ -110,10 +110,10 @@ public class BitcoinClientApiImpl implements BitcoinClientAPI {
    public void addKeyToWallet(String sessionId, byte[] publicKey) throws APIException, IOException {
       try {
          String keyString = HexUtils.toHex(publicKey);
-         HttpURLConnection connection = getHttpConnection("addKeyToWallet","", sessionId);
+         HttpURLConnection connection = getHttpConnection("addKeyToWallet", "", sessionId);
          connection.setDoInput(true);
          connection.setDoOutput(true);
-         connection.setRequestProperty("Content-Length", String.valueOf(keyString.getBytes().length));         
+         connection.setRequestProperty("Content-Length", String.valueOf(keyString.getBytes().length));
          connection.getOutputStream().write(keyString.getBytes());
          int status = connection.getResponseCode();
          if (status != 200) {
@@ -128,18 +128,18 @@ public class BitcoinClientApiImpl implements BitcoinClientAPI {
    public SendCoinForm getSendCoinForm(String sessionId, String receivingAddressString, long amount, long fee)
          throws APIException, IOException {
       try {
-    	  
-          HttpURLConnection connection = getHttpConnection("getSendCoinForm","", sessionId);
-          connection.setDoInput(true);
-          connection.setDoOutput(true);
-          ByteArrayOutputStream toSend = new ByteArrayOutputStream();
-          byte[] addressStringBytes = receivingAddressString.getBytes();
-          toSend.write(addressStringBytes.length);
-          toSend.write(addressStringBytes);
-          BitUtils.uint64ToStream(amount, toSend);
-          BitUtils.uint64ToStream(fee, toSend);
-          connection.setRequestProperty("Content-Length", String.valueOf(toSend.toByteArray().length));         
-          connection.getOutputStream().write(toSend.toByteArray());
+
+         HttpURLConnection connection = getHttpConnection("getSendCoinForm", "", sessionId);
+         connection.setDoInput(true);
+         connection.setDoOutput(true);
+         ByteArrayOutputStream toSend = new ByteArrayOutputStream();
+         byte[] addressStringBytes = receivingAddressString.getBytes();
+         toSend.write(addressStringBytes.length);
+         toSend.write(addressStringBytes);
+         BitUtils.uint64ToStream(amount, toSend);
+         BitUtils.uint64ToStream(fee, toSend);
+         connection.setRequestProperty("Content-Length", String.valueOf(toSend.toByteArray().length));
+         connection.getOutputStream().write(toSend.toByteArray());
          int status = connection.getResponseCode();
          if (status != 200) {
             throw new APIException(StreamReader.readFully(connection.getErrorStream()));
@@ -153,12 +153,12 @@ public class BitcoinClientApiImpl implements BitcoinClientAPI {
    @Override
    public void submitTransaction(String sessionId, Tx tx) throws APIException, IOException {
       try {
-    	  
-         HttpURLConnection connection = getHttpConnection("submitTransaction","", sessionId);
+
+         HttpURLConnection connection = getHttpConnection("submitTransaction", "", sessionId);
          connection.setDoOutput(true);
          ByteArrayOutputStream toSend = new ByteArrayOutputStream();
          tx.toStream(toSend);
-         connection.setRequestProperty("Content-Length", String.valueOf(toSend.toByteArray().length));         
+         connection.setRequestProperty("Content-Length", String.valueOf(toSend.toByteArray().length));
          connection.getOutputStream().write(toSend.toByteArray());
          int status = connection.getResponseCode();
          if (status != 200) {
@@ -169,19 +169,17 @@ public class BitcoinClientApiImpl implements BitcoinClientAPI {
       }
    }
 
-	private HttpURLConnection getHttpConnection(String function,
-			String options, String sessionId) throws IOException {
-		StringBuilder sb = new StringBuilder();
-		String spec = sb.append('/').append(API_VERSION).append('/').append(function).append(options).toString();
-		URL url = new URL(_url, spec);
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		SslUtils.configureTrustedCertificate(connection,
-				BCCAPI_COM_SSL_THUMBPRINT);
-		if (sessionId != null) {
-			connection.setRequestProperty("sessionId", sessionId);
-		}
-		connection.setReadTimeout(60000);
-		return connection;
-	}
-   
+   private HttpURLConnection getHttpConnection(String function, String options, String sessionId) throws IOException {
+      StringBuilder sb = new StringBuilder();
+      String spec = sb.append('/').append(API_VERSION).append('/').append(function).append(options).toString();
+      URL url = new URL(_url, spec);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      SslUtils.configureTrustedCertificate(connection, BCCAPI_COM_SSL_THUMBPRINT);
+      if (sessionId != null) {
+         connection.setRequestProperty("sessionId", sessionId);
+      }
+      connection.setReadTimeout(60000);
+      return connection;
+   }
+
 }

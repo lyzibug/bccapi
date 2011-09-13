@@ -40,6 +40,7 @@ import com.bccapi.core.CoinUtils;
 import com.bccapi.core.DeterministicECKeyManager;
 import com.bccapi.core.ECKeyManager;
 import com.bccapi.core.SeedManager;
+import com.bccapi.core.SeedManager.SeedGenerationTask;
 import com.bccapi.core.SendCoinFormSummary;
 import com.bccapi.core.SendCoinFormValidator;
 
@@ -172,8 +173,17 @@ public class SimpleClient {
       // The depth parameter determines how much CPU time we spend generating
       // the seed. The higher the number the longer time it takes to generate,
       // and the harder it will be to brute force the seed.
-      int depth = 100;
-      byte[] seed = SeedManager.generateSeed(passphrase, salt, depth);
+      int depth = 20;
+      SeedGenerationTask task = SeedManager.getSeedGenerationTask(passphrase, salt, depth);
+      while(!task.isFinished()){
+         print(task.getProgress()+"%");
+         try {
+            Thread.sleep(100);
+         } catch (InterruptedException e) {
+            // ignore
+         }
+      }
+      byte[] seed = task.getSeed();
       print("");
       print("The PIN you enter is used for encrypting the seed file which is kept on");
       print("your client device. You will have to enter it every time you use the client.");

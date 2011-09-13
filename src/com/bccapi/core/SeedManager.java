@@ -38,6 +38,108 @@ public class SeedManager {
    private static final int SEED_LENGTH = 32;
 
    /**
+    * Implementations of this interface allow you to monitor the progress of the
+    * seed generation process, and finally return the generated seed.
+    */
+   public interface SeedGenerationTask {
+
+      /**
+       * Is the seed generation task complete?
+       * 
+       * @return true if the seed generation is complete and
+       *         {@link SeedGenerationTask#getSeed()} contains the calculated
+       *         seed, false otherwise.
+       */
+      boolean isFinished();
+
+      /**
+       * Get the seed generation progress in percent as an integer.
+       * 
+       * @return The seed generation progress in percent as an integer.
+       */
+      int getProgress();
+
+      /**
+       * Get the generated seed. If seed generation is in progress this function
+       * will return null.
+       * 
+       * @return The generated seed if seed generation has completed.
+       */
+      byte[] getSeed();
+
+   }
+
+   private static class SeedGenerator implements Runnable, SeedGenerationTask {
+
+      private String _passphrase;
+      private String _salt;
+      private int _depth;
+      private int _progress;
+      private byte[] _seed;
+
+      public SeedGenerator(String passphrase, String salt, int depth) {
+         _passphrase = passphrase;
+         _salt = salt;
+         _depth = depth;
+         _progress = 0;
+         _seed = null;
+      }
+
+      @Override
+      public boolean isFinished() {
+         return _seed != null;
+      }
+
+      @Override
+      public int getProgress() {
+         return _progress;
+      }
+
+      @Override
+      public byte[] getSeed() {
+         return _seed;
+      }
+
+      @Override
+      public void run() {
+         try {
+            byte[] seed = HashUtils.sha256(_passphrase.getBytes());
+            byte[] saltBytes = HashUtils.sha256(_salt.getBytes());
+            for (int i = 0; i < _depth; i++) {
+               seed = SCrypt.scrypt(seed, saltBytes, 1024, 8, 1, SEED_LENGTH);
+               _progress = (i * 100 / _depth);
+            }
+            _seed = seed;
+         } catch (GeneralSecurityException e) {
+            throw new RuntimeException("Unable to create seed", e);
+         }
+      }
+
+   }
+
+   /**
+    * Get a {@link SeedGenerationTask} instance, which generates a seed from a
+    * passphrase and salt in a background thread, while providing progress
+    * feedback.
+    * 
+    * @param passphrase
+    *           The secret pass phrase to derive the seed from. A longer
+    *           passphrase yields a stronger seed.
+    * @param salt
+    *           The salt to apply when deriving a seed. This should be a
+    *           globally unique value such as an email address.
+    * @param depth
+    *           The number of iterations. A higher value yields a stronger seed.
+    * @return A {@link SeedGenerationTask} instance.
+    */
+   public static SeedGenerationTask getSeedGenerationTask(String passphrase, String salt, int depth) {
+      SeedGenerator generator = new SeedGenerator(passphrase, salt, depth);
+      Thread t = new Thread(generator);
+      t.start();
+      return generator;
+   }
+
+   /**
     * Derive a seed by iteratively calling {@link SCrypt} a specified number of
     * times.
     * 
@@ -129,7 +231,7 @@ public class SeedManager {
 
    private static byte[] deriveOneTimePad(String pin, String salt) throws GeneralSecurityException {
       // Seed the PRNG with the pin and salt
-      PRNG rng = new PRNG(HashUtils.sha256(pin.getBytes(), salt.getBytes()));
+      HmacPRNG rng = new HmacPRNG(HashUtils.sha256(pin.getBytes(), salt.getBytes()));
       // generate one time pad
       byte[] otp = new byte[SEED_LENGTH + 4];
       rng.nextBytes(otp);
