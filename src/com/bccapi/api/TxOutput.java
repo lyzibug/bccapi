@@ -62,7 +62,7 @@ public class TxOutput {
    }
 
    /**
-    * Serialize a {@link TxOutput} instance.
+    * Serialize this {@link TxOutput} instance.
     * 
     * @param stream
     *           the stream to serialize to.

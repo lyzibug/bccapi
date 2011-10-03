@@ -3,7 +3,8 @@ package com.bccapi.api;
 import java.io.IOException;
 
 /**
- * The Bitcoin Client API interface. This interface describes all the functions implemented by the BCCAPI server.
+ * The Bitcoin Client API interface. This interface describes all the functions
+ * implemented by the BCCAPI server.
  */
 public interface BitcoinClientAPI {
 
@@ -62,6 +63,32 @@ public interface BitcoinClientAPI {
     *            If the server responds with an error
     */
    public AccountInfo getAccountInfo(String sessionID) throws IOException, APIException;
+
+   /**
+    * Get {@link AccountStatement} for this account.
+    * <p>
+    * Call this function to get the {@link AccountStatement} for an account,
+    * which includes transaction records. The function allows the caller to
+    * specify which records should be obtained. This enables a client to
+    * minimize bandwidth by only requesting records not seen previously.
+    * 
+    * @param sessionID
+    *           The session ID.
+    * @param startIndex
+    *           The first record index to retrieve. The first record registered
+    *           with an account has index 0.
+    * @param count
+    *           The number of records to retrieve. If the number supplied is
+    *           larger than what is available, only the available records are
+    *           returned.
+    * @return {@link AccountStatement} for this account.
+    * @throws IOException
+    *            If communication with server fails
+    * @throws APIException
+    *            If the server responds with an error
+    */
+   public AccountStatement getAccountStatement(String sessionID, int startIndex, int count) throws IOException,
+         APIException;
 
    /**
     * Add a new public key to the wallet. Any future blocks containing

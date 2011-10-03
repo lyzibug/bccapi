@@ -24,6 +24,7 @@ import java.net.URL;
 
 import com.bccapi.api.APIException;
 import com.bccapi.api.AccountInfo;
+import com.bccapi.api.AccountStatement;
 import com.bccapi.api.BitcoinClientAPI;
 import com.bccapi.api.Network;
 import com.bccapi.api.SendCoinForm;
@@ -96,11 +97,26 @@ public class BitcoinClientApiImpl implements BitcoinClientAPI {
          if (status != 200) {
             throw new APIException(StreamReader.readFully(connection.getErrorStream()));
          }
-         StreamReader reader = new StreamReader(connection.getInputStream());
-         int keys = (int) BitUtils.uint32FromStream(reader);
-         long available = BitUtils.uint64FromStream(reader);
-         long estimated = BitUtils.uint64FromStream(reader);
-         return new AccountInfo(keys, available, estimated);
+         return AccountInfo.fromStream(new DataInputStream(connection.getInputStream()));
+      } catch (IOException e) {
+         throw e;
+      }
+   }
+   
+   @Override
+   public AccountStatement getAccountStatement(String sessionId, int startIndex, int count) throws IOException, APIException {
+      try {
+         StringBuilder sb = new StringBuilder();
+         sb.append("?index=").append(startIndex);
+         sb.append("&count=").append(count);
+         HttpURLConnection connection = getHttpConnection("getAccountStatement", sb.toString(), sessionId);
+         connection.setRequestMethod("GET");
+         connection.connect();
+         int status = connection.getResponseCode();
+         if (status != 200) {
+            throw new APIException(StreamReader.readFully(connection.getErrorStream()));
+         }
+         return AccountStatement.fromStream(new DataInputStream(connection.getInputStream()));
       } catch (IOException e) {
          throw e;
       }

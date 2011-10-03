@@ -1,6 +1,11 @@
 package com.bccapi.api;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
 import com.bccapi.core.Account;
+import com.bccapi.core.BitUtils;
 import com.bccapi.core.CoinUtils;
 
 /**
@@ -31,7 +36,8 @@ public class AccountInfo {
 
    /**
     * Get the balance available to this account. All funds are confirmed by at
-    * least one block.
+    * least one block, and can be used for spending.
+    * 
     * @return The balance available to this account.
     */
    public long getAvailableBalance() {
@@ -50,6 +56,7 @@ public class AccountInfo {
     * <p>
     * Note that estimated balance does not contain unconfirmed transactions sent
     * to this account by another account.
+    * 
     * @return The estimated balance of this account.
     */
    public long getEstimatedBalance() {
@@ -60,6 +67,34 @@ public class AccountInfo {
    public String toString() {
       return "Keys: " + getKeys() + " Balance: " + CoinUtils.valueString(getEstimatedBalance()) + " ("
             + CoinUtils.valueString(getAvailableBalance()) + ")";
+   }
+
+   /**
+    * Deserialize an {@link AccountInfo} from a {@link DataInputStream}.
+    * 
+    * @param stream
+    *           The {@link DataInputStream} to deserialize from.
+    * @return A {@link AccountInfo}.
+    * @throws IOException
+    */
+   public static AccountInfo fromStream(DataInputStream stream) throws IOException {
+      int keys = (int) BitUtils.uint32FromStream(stream);
+      long available = BitUtils.uint64FromStream(stream);
+      long estimated = BitUtils.uint64FromStream(stream);
+      return new AccountInfo(keys, available, estimated);
+   }
+
+   /**
+    * Serialize this {@link AccountInfo} instance.
+    * 
+    * @param out
+    *           The output stream to serialize to.
+    * @throws IOException
+    */
+   public void toStream(OutputStream out) throws IOException {
+      BitUtils.uint32ToStream(_keys, out);
+      BitUtils.uint64ToStream(_availableBalance, out);
+      BitUtils.uint64ToStream(_estimatedBalance, out);
    }
 
 }

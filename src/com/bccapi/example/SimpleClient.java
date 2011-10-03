@@ -27,9 +27,19 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Formatter;
+import java.util.List;
+import java.util.Locale;
 
 import com.bccapi.api.APIException;
 import com.bccapi.api.AccountInfo;
+import com.bccapi.api.AccountStatement;
+import com.bccapi.api.AccountStatement.Record;
+import com.bccapi.api.AccountStatement.Record.Type;
 import com.bccapi.api.Network;
 import com.bccapi.api.SendCoinForm;
 import com.bccapi.core.Account;
@@ -43,6 +53,7 @@ import com.bccapi.core.SeedManager;
 import com.bccapi.core.SeedManager.SeedGenerationTask;
 import com.bccapi.core.SendCoinFormSummary;
 import com.bccapi.core.SendCoinFormValidator;
+import com.bccapi.core.StringUtils;
 
 /**
  * This client is a simple example of how you might create a Bitcoin client
@@ -117,12 +128,14 @@ public class SimpleClient {
          if (option.equals("1")) {
             showBalance(account);
          } else if (option.equals("2")) {
-            showAdresses(account);
+            showStatements(account);
          } else if (option.equals("3")) {
-            createNewAddress(account);
+            showAdresses(account);
          } else if (option.equals("4")) {
-            sendCoins(account);
+            createNewAddress(account);
          } else if (option.equals("5")) {
+            sendCoins(account);
+         } else if (option.equals("6")) {
             return;
          } else {
             print("Invalid Option");
@@ -175,8 +188,8 @@ public class SimpleClient {
       // and the harder it will be to brute force the seed.
       int depth = 20;
       SeedGenerationTask task = SeedManager.getSeedGenerationTask(passphrase, salt, depth);
-      while(!task.isFinished()){
-         print(task.getProgress()+"%");
+      while (!task.isFinished()) {
+         print(task.getProgress() + "%");
          try {
             Thread.sleep(100);
          } catch (InterruptedException e) {
@@ -224,10 +237,11 @@ public class SimpleClient {
       print("==   Options   ==");
       print("=================");
       print("1. Get wallet balance");
-      print("2. My receiving addresses");
-      print("3. Create new receiving address");
-      print("4. Send coins");
-      print("5. Exit");
+      print("2. Get wallet statement");
+      print("3. My receiving addresses");
+      print("4. Create new receiving address");
+      print("5. Send coins");
+      print("6. Exit");
       printnln("Enter option:");
    }
 
@@ -235,7 +249,60 @@ public class SimpleClient {
       AccountInfo info = account.getInfo();
       String estimatedBalance = CoinUtils.valueString(info.getEstimatedBalance());
       String availableBalance = CoinUtils.valueString(info.getAvailableBalance());
-      System.out.println("Balance: " + estimatedBalance + "(" + availableBalance + ") BTC");
+      print("Balance: " + estimatedBalance + "(" + availableBalance + ") BTC");
+   }
+
+   private static void showStatements(Account account) throws APIException, IOException {
+      AccountStatement statement = account.getStatement(0, 100);
+      if (!statement.getRecords().isEmpty()) {
+         Date midnight = getMidnight();
+         DateFormat hourFormat = DateFormat.getDateInstance(DateFormat.SHORT);
+         DateFormat dayFormat = DateFormat.getTimeInstance(DateFormat.SHORT);
+         print("---------------------------------------------------------------------------------------------------");
+         print("|###|Confirmations|Date       |Description                                             |    Credit|");
+         print("|---|-------------|-----------|--------------------------------------------------------|----------|");
+         List<Record> records = statement.getRecords();
+         Collections.reverse(records);
+         for (AccountStatement.Record record : records) {
+            StringBuilder sb = new StringBuilder();
+            Formatter f = new Formatter(sb, Locale.US);
+
+            // Determine which date formatter to use
+            Date date = new Date(record.getDate());
+            DateFormat dateFormat = date.before(midnight) ? hourFormat : dayFormat;
+
+            // Create description
+            String description;
+            if (record.getType() == Type.Sent) {
+               description = StringUtils.cap("Sent to:          " + record.getAddresses(), 56);
+            } else if (record.getType() == Type.Received) {
+               description = StringUtils.cap("Received with:    " + record.getAddresses(), 56);
+            } else {
+               description = StringUtils.cap("Sent to yourself  ", 56);
+            }
+
+            String valueString = CoinUtils.valueString(record.getAmount());
+
+            // Format & print record
+            f.format("|%1$3s|%2$-13s|%3$-11s|%4$-56s|%5$10s|", record.getIndex(), record.getConfirmations(),
+                  dateFormat.format(date), description, valueString);
+            print(sb.toString());
+         }
+         print("---------------------------------------------------------------------------------------------------");
+      } else {
+         print("There is no record of any transactions for this wallet");
+      }
+      // Print out current balance and balance available for sending
+      String estimatedBalance = CoinUtils.valueString(statement.getInfo().getEstimatedBalance());
+      String availableBalance = CoinUtils.valueString(statement.getInfo().getAvailableBalance());
+      print("Balance: " + estimatedBalance + "(" + availableBalance + ") BTC");
+   }
+
+   private static Date getMidnight() {
+      Calendar midnight = Calendar.getInstance();
+      midnight.set(midnight.get(Calendar.YEAR), midnight.get(Calendar.MONTH), midnight.get(Calendar.DAY_OF_MONTH), 0,
+            0, 0);
+      return midnight.getTime();
    }
 
    private static void showAdresses(Account account) throws APIException, IOException {

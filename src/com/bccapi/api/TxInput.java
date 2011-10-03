@@ -100,7 +100,7 @@ public class TxInput {
    }
 
    /**
-    * Serialize a {@link TxInput} instance.
+    * Serialize this {@link TxInput} instance.
     * 
     * @param out
     *           the output stream to serialize to.
