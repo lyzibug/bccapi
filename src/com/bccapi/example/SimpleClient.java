@@ -68,13 +68,7 @@ public class SimpleClient {
          if (args.length != 1) {
             usage();
          }
-         if (args[0].toLowerCase().equals("testnet")) {
-            clientMain(Network.testNetwork);
-         } else if (args[0].toLowerCase().equals("prodnet")) {
-            clientMain(Network.productionNetwork);
-         } else {
-            usage();
-         }
+         clientMain(args[0]);
       } catch (Throwable t) {
          t.printStackTrace();
          print(t.getMessage());
@@ -84,20 +78,48 @@ public class SimpleClient {
    private static void usage() {
       print("Usage: SimpleClient <network>");
       print("where:");
-      print("   <network> must be either \"testnet\" or \"prodnet\"");
+      print("   <network> must be either \"testnet\", \"prodnet\", or \"closedtestnet\"");
+      print("");
+      print("Use \"prodnet\" to connect to the official Bitcoin production network.");
+      print("");
+      print("Use \"testnet\" to connect to the official Bitcoin test network. This is");
+      print("useful for testing a BCCAPI client that can send/receive coins from other");
+      print("client types using the test network. Obtain free test coins from the");
+      print("Testnet Fauchet at \"http://testnet.freebitcoins.appspot.com/\". The test");
+      print("network may be unstable at times, as the number of mining power varies a");
+      print("lot.");
+      print("");
+      print("Use \"closedtestnet\" to connect to a closed Bitcoin test network. This is");
+      print("useful for testing sending and receiving between BCCAPI clients. The");
+      print("network is reliable as the mining power is constant. Obtain free coins by");
+      print("running the SimpleClient on a community shared account using \"asd\" as the");
+      print("passphrase and \"asd\" as the salt, and transfer some coins to your own");
+      print("BCCAPI client.");
       System.exit(1);
    }
 
-   private static void clientMain(Network network) throws Exception {
+   private static void clientMain(String net) throws Exception {
+      // Determine which network to use
       String seedFile;
       URL url;
-      if (network.equals(Network.productionNetwork)) {
+      Network network;
+      if (net.toLowerCase().equals("prodnet")) {
          seedFile = "seed.bin";
-         url = new URL("https://prodnet.bccapi.com:443");
-      } else {
+         url = new URL("https://prodnet.bccapi.com");
+         network = Network.productionNetwork;
+      } else if (net.toLowerCase().equals("testnet")) {
          seedFile = "test-seed.bin";
-         url = new URL("https://testnet.bccapi.com:444");
+         url = new URL("https://prodnet.bccapi.com:444");
+         network = Network.testNetwork;
+      } else if (net.toLowerCase().equals("closedtestnet")) {
+         seedFile = "closed-test-seed.bin";
+         url = new URL("https://testnet.bccapi.com:445");
+         network = Network.testNetwork;
+      } else {
+         usage();
+         return;
       }
+
       // Determine seed for key manager
       byte[] seed = initializeOrLoadSeedFile(seedFile);
 
