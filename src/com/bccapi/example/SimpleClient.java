@@ -275,7 +275,11 @@ public class SimpleClient {
    }
 
    private static void showStatements(Account account) throws APIException, IOException {
-      AccountStatement statement = account.getStatement(0, 100);
+      AccountStatement statement = account.getStatement(0, 0);
+      int totalRecords = statement.getTotalRecordCount();
+      if (totalRecords != 0) {
+         statement = account.getStatement(Math.max(0, totalRecords - 15), 15);
+      }
       if (!statement.getRecords().isEmpty()) {
          Date midnight = getMidnight();
          DateFormat hourFormat = DateFormat.getDateInstance(DateFormat.SHORT);
@@ -352,7 +356,7 @@ public class SimpleClient {
 
       // Receiving address
       printnln("Enter receiving address: ");
-      String address = readLine();
+      String address = readLine().trim();
       if (!AddressUtil.validateAddress(address, account.getNetwork())) {
          print("Invalid address");
          return;
@@ -362,7 +366,7 @@ public class SimpleClient {
       printnln("Enter amount to send in BTC: ");
       Long toSend;
       try {
-         BigDecimal amount = new BigDecimal(readLine());
+         BigDecimal amount = new BigDecimal(readLine().trim());
          // Convert to satoshis
          amount = amount.multiply(new BigDecimal(100000000));
          toSend = amount.longValue();
