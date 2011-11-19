@@ -3,6 +3,7 @@ package com.bccapi.api;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 import com.bccapi.core.BitUtils;
 import com.bccapi.core.CompactInt;
@@ -23,9 +24,20 @@ public class TxOutput {
     * @param script
     *           The output script.
     */
-   private TxOutput(long value, byte[] script) {
+   public TxOutput(long value, byte[] script) {
       _value = value;
       _script = script;
+   }
+
+   /**
+    * Copy construct a transaction output.
+    * 
+    * @param other
+    *           The transaction output to copy
+    */
+   public TxOutput(TxOutput other) {
+      _value = other._value;
+      _script = Arrays.copyOf(other._script, other._script.length);
    }
 
    /**

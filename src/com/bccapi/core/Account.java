@@ -147,7 +147,7 @@ public class Account {
    /**
     * Get a {@link SendCoinForm} from the BCCAPI server by supplying an amount
     * to send and the address of the receiver. The form obtained should be
-    * verified using the {@link SendCoinFormSummary} and sent using the
+    * verified using the {@link SendCoinFormValidator} and sent using the
     * {@link Account#signAndSubmitSendCoinForm} function.
     * 
     * @param receivingAddress
@@ -157,7 +157,9 @@ public class Account {
     *           0.000000001 BTC)
     * @param fee
     *           The size of the fee to include in the transaction in satoshis (1
-    *           satoshi = 0.000000001 BTC)
+    *           satoshi = 0.000000001 BTC). If -1 is specified as the fee the
+    *           server will automatically calculate a fee, which will guarantee
+    *           transaction processing.
     * @return A {@link SendCoinForm}
     * @throws APIException
     * @throws IOException

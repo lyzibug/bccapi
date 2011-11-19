@@ -1,5 +1,6 @@
 package com.bccapi.api;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,6 +46,25 @@ public class Tx {
       _inputs = inputs;
       _outputs = outputs;
       _lockTime = lockTime;
+   }
+
+   /**
+    * Copy constructor for transaction
+    * 
+    * @param other
+    *           The Tx to copy
+    */
+   public Tx(Tx other) {
+      _version = other._version;
+      _inputs = new ArrayList<TxInput>();
+      for (TxInput input : other._inputs) {
+         _inputs.add(new TxInput(input));
+      }
+      _outputs = new ArrayList<TxOutput>();
+      for (TxOutput output : other._outputs) {
+         _outputs.add(new TxOutput(output));
+      }
+      _lockTime = other._lockTime;
    }
 
    /**
@@ -125,5 +145,20 @@ public class Tx {
          output.toStream(stream);
       }
       BitUtils.uint32ToStream(_lockTime, stream);
+   }
+
+   /**
+    * Serialize the transaction to an array of bytes
+    * 
+    * @return The transaction serialized to an array of bytes
+    */
+   public byte[] toByteArray() {
+      ByteArrayOutputStream stream = new ByteArrayOutputStream();
+      try {
+         toStream(stream);
+      } catch (IOException e) {
+         // Never happens, as we are working on a memory stream
+      }
+      return stream.toByteArray();
    }
 }

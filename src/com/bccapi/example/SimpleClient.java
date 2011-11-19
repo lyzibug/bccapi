@@ -375,6 +375,7 @@ public class SimpleClient {
          return;
       }
 
+      /*
       // Fee
       printnln("Enter fee for miner in BTC (hit enter for zero): ");
       Long fee;
@@ -392,15 +393,25 @@ public class SimpleClient {
          print("Invalid value entered.");
          return;
       }
-
+*/
+      
       SendCoinForm form;
       try {
-         form = account.getSendCoinForm(address, toSend, fee);
+         // specifying -1 as the fee tells the server to generate a transaction
+         // with a fee that is guaranteed to get processed. Use
+         // SendCoinFormSummary on the received SendCoinForm to determine which
+         // fee the server has calculated
+         form = account.getSendCoinForm(address, toSend, -1);
       } catch (APIException e) {
          print(e.getMessage());
          return;
       }
 
+      long fee = SendCoinFormValidator.calculateFee(form);
+      print("Network fee for this transaction: "+CoinUtils.valueString(fee));
+      printnln("Hit enter.");
+      readLine();
+     
       // Validate that the form matches what we actually requested, and that the
       // server does not cheat on us
       if (!SendCoinFormValidator.validate(form, account, toSend, fee, address)) {

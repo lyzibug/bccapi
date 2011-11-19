@@ -46,8 +46,7 @@ public class SendCoinFormValidator {
     *           The receiving address
     * @return true is the form is valid, false otherwise.
     */
-   public static boolean validate(SendCoinForm form, Account myAccount, long amount, long fee,
-         String receiver) {
+   public static boolean validate(SendCoinForm form, Account myAccount, long amount, long fee, String receiver) {
       // Build the list of addresses controlled by this account
       Set<String> myAddresses = new HashSet<String>(myAccount.getAddresses());
 
@@ -107,5 +106,28 @@ public class SendCoinFormValidator {
          // One of the transaction scripts were invalid
          return false;
       }
+   }
+
+   /**
+    * Calculate the fee of a SendCoinForm. This is useful if you want to know
+    * which fee the server has calculated for a transaction.
+    * 
+    * @param form
+    *           The {@link SendCoinForm} to calculate the fee on.
+    * @return The fee that is used with this send coin form.
+    */
+   public static long calculateFee(SendCoinForm form) {
+      long inCoins = 0;
+      long outCoins = 0;
+      // Sum up all the input values
+      for (TxOutput out : form.getFunding()) {
+         inCoins += out.getValue();
+      }
+      // Sum up the output value
+      for (TxOutput out : form.getTransaction().getOutputs()) {
+         outCoins += out.getValue();
+      }
+      // return fee
+      return inCoins - outCoins;
    }
 }

@@ -35,27 +35,24 @@ public class AccountInfo {
    }
 
    /**
-    * Get the balance available to this account. All funds are confirmed by at
-    * least one block, and can be used for spending.
+    * Get the balance available for spending. This includes all unspent
+    * transactions sent to one of your addresses which are confirmed by at least
+    * one block, plus any change sent back to your account from one of your own
+    * addresses. This value is what you would expect to see in a UI.
     * 
-    * @return The balance available to this account.
+    * @return The balance available for spending.
     */
    public long getAvailableBalance() {
       return _availableBalance;
    }
 
    /**
-    * Get the estimated balance of this account. This value is what you would
-    * expect to see in a UI.
+    * Get the estimated balance of this account. This is the balance available
+    * for spending plus unconfirmed the amount in transit your account.
     * <p>
-    * The estimated balance of an account is the available balance plus the
-    * change from previous transactions from this account which has not yet been
-    * confirmed by any blocks. Note that the change from previous unconfirmed
-    * transactions cannot be sent to other accounts until they have been
-    * confirmed by a block.
+    * If you subtract the available balance from the estimated balance you get
+    * the number of unconfirmed bitcoins in transit to you.
     * <p>
-    * Note that estimated balance does not contain unconfirmed transactions sent
-    * to this account by another account.
     * 
     * @return The estimated balance of this account.
     */
@@ -65,8 +62,8 @@ public class AccountInfo {
 
    @Override
    public String toString() {
-      return "Keys: " + getKeys() + " Balance: " + CoinUtils.valueString(getEstimatedBalance()) + " ("
-            + CoinUtils.valueString(getAvailableBalance()) + ")";
+      return "Keys: " + getKeys() + " Balance: " + CoinUtils.valueString(getAvailableBalance()) + " ("
+            + CoinUtils.valueString(getEstimatedBalance()) + ")";
    }
 
    /**
