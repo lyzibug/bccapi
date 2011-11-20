@@ -109,11 +109,11 @@ public class SimpleClient {
          network = Network.productionNetwork;
       } else if (net.toLowerCase().equals("testnet")) {
          seedFile = "test-seed.bin";
-         url = new URL("https://prodnet.bccapi.com:444");
+         url = new URL("https://testnet.bccapi.com:444");
          network = Network.testNetwork;
       } else if (net.toLowerCase().equals("closedtestnet")) {
          seedFile = "closed-test-seed.bin";
-         url = new URL("https://testnet.bccapi.com:445");
+         url = new URL("https://closedtestnet.bccapi.com:445");
          network = Network.testNetwork;
       } else {
          usage();
