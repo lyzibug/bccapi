@@ -47,6 +47,7 @@ import com.bccapi.core.AddressUtil;
 import com.bccapi.core.BccScript.BccScriptException;
 import com.bccapi.core.BitcoinClientApiImpl;
 import com.bccapi.core.CoinUtils;
+import com.bccapi.core.DeterministicECKeyExporter;
 import com.bccapi.core.DeterministicECKeyManager;
 import com.bccapi.core.ECKeyManager;
 import com.bccapi.core.SeedManager;
@@ -158,6 +159,8 @@ public class SimpleClient {
          } else if (option.equals("5")) {
             sendCoins(account);
          } else if (option.equals("6")) {
+            exportPrivateKeys(account, seed);
+         } else if (option.equals("7")) {
             return;
          } else {
             print("Invalid Option");
@@ -263,7 +266,8 @@ public class SimpleClient {
       print("3. My receiving addresses");
       print("4. Create new receiving address");
       print("5. Send coins");
-      print("6. Exit");
+      print("6. Export private keys");
+      print("7. Exit");
       printnln("Enter option:");
    }
 
@@ -275,11 +279,7 @@ public class SimpleClient {
    }
 
    private static void showStatements(Account account) throws APIException, IOException {
-      AccountStatement statement = account.getStatement(0, 0);
-      int totalRecords = statement.getTotalRecordCount();
-      if (totalRecords != 0) {
-         statement = account.getStatement(Math.max(0, totalRecords - 15), 15);
-      }
+      AccountStatement statement = account.getRecentTransactionSummary(10);
       if (!statement.getRecords().isEmpty()) {
          Date midnight = getMidnight();
          DateFormat hourFormat = DateFormat.getDateInstance(DateFormat.SHORT);
@@ -375,26 +375,6 @@ public class SimpleClient {
          return;
       }
 
-      /*
-      // Fee
-      printnln("Enter fee for miner in BTC (hit enter for zero): ");
-      Long fee;
-      try {
-         String feeString = readLine();
-         if (feeString.length() == 0) {
-            fee = 0L;
-         } else {
-            BigDecimal amount = new BigDecimal(feeString);
-            // Convert to satoshis
-            amount = amount.multiply(new BigDecimal(100000000));
-            fee = amount.longValue();
-         }
-      } catch (NumberFormatException e) {
-         print("Invalid value entered.");
-         return;
-      }
-*/
-      
       SendCoinForm form;
       try {
          // specifying -1 as the fee tells the server to generate a transaction
@@ -408,10 +388,10 @@ public class SimpleClient {
       }
 
       long fee = SendCoinFormValidator.calculateFee(form);
-      print("Network fee for this transaction: "+CoinUtils.valueString(fee));
+      print("Network fee for this transaction: " + CoinUtils.valueString(fee));
       printnln("Hit enter.");
       readLine();
-     
+
       // Validate that the form matches what we actually requested, and that the
       // server does not cheat on us
       if (!SendCoinFormValidator.validate(form, account, toSend, fee, address)) {
@@ -431,6 +411,16 @@ public class SimpleClient {
          return;
       }
       print("Coins sent.");
+   }
+
+   private static void exportPrivateKeys(Account account, byte[] seed) throws APIException, IOException {
+      int keys = account.getAddresses().size();
+      print("Private keys:");
+      DeterministicECKeyExporter exporter = new DeterministicECKeyExporter(seed);
+      for (int i = 0; i < keys; i++) {
+         String privateKey = exporter.getPrivateKeyExporter(i + 1).getBase58EncodedKey(account.getNetwork());
+         print(privateKey);
+      }
    }
 
    private static String readLine() throws IOException {
