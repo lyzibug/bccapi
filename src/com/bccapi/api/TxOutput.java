@@ -3,7 +3,6 @@ package com.bccapi.api;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 
 import com.bccapi.core.BitUtils;
 import com.bccapi.core.CompactInt;
@@ -37,7 +36,7 @@ public class TxOutput {
     */
    public TxOutput(TxOutput other) {
       _value = other._value;
-      _script = Arrays.copyOf(other._script, other._script.length);
+      _script = BitUtils.copyByteArray(other._script);
    }
 
    /**

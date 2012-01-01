@@ -3,7 +3,6 @@ package com.bccapi.api;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 
 import com.bccapi.core.BitUtils;
 import com.bccapi.core.CompactInt;
@@ -44,9 +43,9 @@ public class TxInput {
     *           The transaction input to copy
     */
    public TxInput(TxInput other) {
-      _outPointHash = Arrays.copyOf(other._outPointHash, other._outPointHash.length);
+      _outPointHash = BitUtils.copyByteArray(other._outPointHash);
       _outPointIndex = other._outPointIndex;
-      _script = Arrays.copyOf(other._script, other._script.length);
+      _script = BitUtils.copyByteArray(other._script);
       _sequence = other._sequence;
    }
 

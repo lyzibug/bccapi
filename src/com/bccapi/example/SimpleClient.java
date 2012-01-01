@@ -394,14 +394,14 @@ public class SimpleClient {
 
       // Validate that the form matches what we actually requested, and that the
       // server does not cheat on us
-      if (!SendCoinFormValidator.validate(form, account, toSend, fee, address)) {
+      if (!SendCoinFormValidator.validate(form, account.getAddresses(), account.getNetwork(), toSend, fee, address)) {
          print("Warning: Invalid SendCoinForm received from BCCAPI server ");
          return;
       }
 
       // Print out a summary of the form
       print("==== Summary of coins being sent ====");
-      System.out.println(new SendCoinFormSummary(form, account));
+      System.out.println(new SendCoinFormSummary(form, account.getAddresses(), account.getNetwork()));
       printnln("Hit enter to send coins.");
       readLine();
       try {
