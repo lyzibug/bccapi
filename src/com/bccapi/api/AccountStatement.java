@@ -3,7 +3,6 @@ package com.bccapi.api;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,7 +88,6 @@ public class AccountStatement {
          }
       }
 
-      private static Charset UTF8 = Charset.forName("UTF-8");
       private int _index;
       private int _confirmations;
       private long _date;
@@ -201,7 +199,7 @@ public class AccountStatement {
          Type type = Type.fromStream(stream);
          byte[] bytes = new byte[(int) CompactInt.fromStream(stream)];
          stream.readFully(bytes);
-         String addresses = new String(bytes, UTF8);
+         String addresses = new String(bytes);
          long credit = BitUtils.uint64FromStream(stream);
          return new Record(recordIndex, confirmations, date, type, addresses, credit);
       }
@@ -218,7 +216,7 @@ public class AccountStatement {
          CompactInt.toStream(_confirmations, out);
          BitUtils.uint64ToStream(_date, out);
          _type.toStream(out);
-         byte[] bytes = _addresses.getBytes(UTF8);
+         byte[] bytes = _addresses.getBytes();
          CompactInt.toStream(bytes.length, out);
          out.write(bytes);
          BitUtils.uint64ToStream(_amount, out);
