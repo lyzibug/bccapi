@@ -51,9 +51,8 @@ public class CustomBuiltTransaction {
       System.out.println("Our transaction hash: " + tx.getHash().toString());
 
       // Broadcast transaction (here we depend on the BCCAPI server, you can use
-      // whatever API you like for this)
+      // whatever other means you want for broadcasting the transaction)
       URL url = new URL("http://bqs1.bccapi.com:80");
-      // URL url = new URL("http://localhost:8080");
       BitcoinClientApi api = new BitcoinClientApiImpl(url, NetworkParameters.productionNetwork);
       BroadcastTransactionResponse response = api.broadcastTransaction(new BroadcastTransactionRequest(tx));
       System.out.println("Broadcasted transaction with hash: " + response.hash.toString());
