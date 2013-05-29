@@ -28,6 +28,7 @@ public class Point implements Serializable {
       this._curve = curve;
       this._x = x;
       this._y = y;
+      this._compressed = compressed;
    }
 
    public Curve getCurve() {

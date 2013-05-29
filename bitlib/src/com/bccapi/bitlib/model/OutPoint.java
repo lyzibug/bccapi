@@ -1,12 +1,16 @@
 package com.bccapi.bitlib.model;
 
+import java.io.Serializable;
+
 import com.bccapi.bitlib.util.ByteReader;
 import com.bccapi.bitlib.util.ByteReader.InsufficientBytesException;
 import com.bccapi.bitlib.util.ByteWriter;
 import com.bccapi.bitlib.util.HexUtils;
 import com.bccapi.bitlib.util.Sha256Hash;
 
-public class OutPoint {
+public class OutPoint implements Serializable {
+   private static final long serialVersionUID = 1L;
+   
    public static final OutPoint COINBASE_OUTPOINT = new OutPoint(Sha256Hash.ZERO_HASH, 0);
    public Sha256Hash hash;
    public int index;

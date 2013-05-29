@@ -1,11 +1,13 @@
 package com.bccapi.bitlib.util;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-public class Sha256Hash {
+public class Sha256Hash implements Serializable {
+   private static final long serialVersionUID = 1L;
 
    public static final Sha256Hash ZERO_HASH = new Sha256Hash();
    public static final int HASH_LENGTH = 32;

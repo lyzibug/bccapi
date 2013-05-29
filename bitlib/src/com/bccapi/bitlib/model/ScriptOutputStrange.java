@@ -1,9 +1,12 @@
 package com.bccapi.bitlib.model;
 
+import java.io.Serializable;
+
 /**
  * This class is used for output scripts that we do not understand
  */
-public class ScriptOutputStrange extends ScriptOutput {
+public class ScriptOutputStrange extends ScriptOutput implements Serializable {
+   private static final long serialVersionUID = 1L;
 
    protected ScriptOutputStrange(byte[][] chunks, byte[] scriptBytes) {
       super(scriptBytes);

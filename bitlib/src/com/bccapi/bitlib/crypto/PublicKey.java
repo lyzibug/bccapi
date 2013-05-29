@@ -56,9 +56,6 @@ public class PublicKey implements Serializable {
    }
 
    public boolean verifyStandardBitcoinSignature(byte[] data, byte[] signature) {
-      if (_Q == null) {
-         _Q = Parameters.curve.decodePoint(_pubKeyBytes);
-      }
       // Decode parameters r and s
       ByteReader reader = new ByteReader(signature);
 
@@ -70,7 +67,21 @@ public class PublicKey implements Serializable {
       if (reader.available() != 1) {
          return false;
       }
-      return verifySignature(data, params[0], params[1], _Q);
+      return verifySignature(data, params[0], params[1], getQ());
+   }
+
+   /**
+    * Is this a compressed public key?
+    */
+   public boolean isCompressed() {
+      return getQ().isCompressed();
+   }
+
+   private Point getQ() {
+      if (_Q == null) {
+         _Q = Parameters.curve.decodePoint(_pubKeyBytes);
+      }
+      return _Q;
    }
 
    private static BigInteger[] decodeSignatureParameters(ByteReader reader) {

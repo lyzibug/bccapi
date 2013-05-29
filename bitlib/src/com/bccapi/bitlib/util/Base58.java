@@ -160,7 +160,7 @@ public class Base58 {
     */
    public static byte[] decodeChecked(String input) {
       byte tmp[] = decode(input);
-      if (tmp.length < 4) {
+      if (tmp == null || tmp.length < 4) {
          return null;
       }
       byte[] bytes = copyOfRange(tmp, 0, tmp.length - 4);

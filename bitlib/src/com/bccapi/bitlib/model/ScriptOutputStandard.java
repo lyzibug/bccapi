@@ -1,6 +1,9 @@
 package com.bccapi.bitlib.model;
 
-public class ScriptOutputStandard extends ScriptOutput {
+import java.io.Serializable;
+
+public class ScriptOutputStandard extends ScriptOutput implements Serializable {
+   private static final long serialVersionUID = 1L;
 
    private byte[] _addressBytes;
 

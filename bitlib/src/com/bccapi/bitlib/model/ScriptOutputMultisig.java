@@ -1,6 +1,9 @@
 package com.bccapi.bitlib.model;
 
-public class ScriptOutputMultisig extends ScriptOutput {
+import java.io.Serializable;
+
+public class ScriptOutputMultisig extends ScriptOutput implements Serializable {
+   private static final long serialVersionUID = 1L;
 
    protected ScriptOutputMultisig(byte[][] chunks, byte[] scriptBytes) {
       super(scriptBytes);

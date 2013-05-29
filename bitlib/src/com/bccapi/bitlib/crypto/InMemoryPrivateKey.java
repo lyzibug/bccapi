@@ -21,14 +21,30 @@ import com.bccapi.bitlib.util.HashUtils;
 public class InMemoryPrivateKey extends PrivateKey implements KeyExporter, Serializable {
 
    private static final long serialVersionUID = 1L;
-   
+
    private final BigInteger _privateKey;
    private final PublicKey _publicKey;
 
    /**
-    * Construct a random private key using a secure random source.
+    * Construct a random private key using a secure random source. Using this
+    * constructor yields uncompressed public keys.
     */
    public InMemoryPrivateKey(SecureRandom random) {
+      this(random, false);
+   }
+
+   /**
+    * Construct a random private key using a secure random source with optional
+    * compressed public keys.
+    * 
+    * @param random
+    *           The random source from which the private key will be
+    *           deterministically generated.
+    * @param compressed
+    *           Specifies whether the corresponding public key should be
+    *           compressed
+    */
+   public InMemoryPrivateKey(SecureRandom random, boolean compressed) {
       int nBitLength = Parameters.n.bitLength();
       BigInteger d;
       do {
@@ -44,16 +60,35 @@ public class InMemoryPrivateKey extends PrivateKey implements KeyExporter, Seria
 
       Point Q = EcTools.multiply(Parameters.G, d);
       _privateKey = d;
+      if (compressed) {
+         // Convert Q to a compressed point on the curve
+         Q = new Point(Q.getCurve(), Q.getX(), Q.getY(), true);
+      }
       _publicKey = new PublicKey(Q.getEncoded());
    }
 
    /**
-    * Construct from private key bytes
+    * Construct from private key bytes. Using this constructor yields
+    * uncompressed public keys.
     * 
     * @param bytes
     *           The private key as an array of bytes
     */
    public InMemoryPrivateKey(byte[] bytes) {
+      this(bytes, false);
+   }
+
+   /**
+    * Construct from private key bytes. Using this constructor yields
+    * uncompressed public keys.
+    * 
+    * @param bytes
+    *           The private key as an array of bytes
+    * @param compressed
+    *           Specifies whether the corresponding public key should be
+    *           compressed
+    */
+   public InMemoryPrivateKey(byte[] bytes, boolean compressed) {
       if (bytes.length != 32) {
          throw new IllegalArgumentException("The length must be 32 bytes");
       }
@@ -61,7 +96,12 @@ public class InMemoryPrivateKey extends PrivateKey implements KeyExporter, Seria
       byte[] keyBytes = new byte[33];
       System.arraycopy(bytes, 0, keyBytes, 1, 32);
       _privateKey = new BigInteger(keyBytes);
-      _publicKey = new PublicKey(EcTools.multiply(Parameters.G, _privateKey).getEncoded());
+      Point Q = EcTools.multiply(Parameters.G, _privateKey);
+      if (compressed) {
+         // Convert Q to a compressed point on the curve
+         Q = new Point(Q.getCurve(), Q.getX(), Q.getY(), true);
+      }
+      _publicKey = new PublicKey(Q.getEncoded());
    }
 
    /**
@@ -86,7 +126,9 @@ public class InMemoryPrivateKey extends PrivateKey implements KeyExporter, Seria
     */
    public InMemoryPrivateKey(String base58Encoded, NetworkParameters network) {
       byte[] decoded = Base58.decodeChecked(base58Encoded);
-      if (decoded == null || decoded.length != 33) {
+
+      // Validate format
+      if (decoded == null || decoded.length < 33 || decoded.length > 34) {
          throw new IllegalArgumentException("Invalid base58 encoded key");
       }
       if (network.equals(NetworkParameters.productionNetwork) && decoded[0] != (byte) 0x80) {
@@ -95,10 +137,31 @@ public class InMemoryPrivateKey extends PrivateKey implements KeyExporter, Seria
       if (network.equals(NetworkParameters.testNetwork) && decoded[0] != (byte) 0xEF) {
          throw new IllegalArgumentException("The base58 encoded key is not for the test network");
       }
+
+      // Determine whether compression should be used for the public key
+      boolean compressed;
+      if (decoded.length == 34) {
+         if (decoded[33] != 0x01) {
+            throw new IllegalArgumentException("Invalid base58 encoded key");
+         }
+         // Get rid of the compression indication byte at the end
+         byte[] temp = new byte[33];
+         System.arraycopy(decoded, 0, temp, 0, temp.length);
+         decoded = temp;
+         compressed = true;
+      } else {
+         compressed = false;
+      }
       // Make positive and clear network prefix
       decoded[0] = 0;
+
       _privateKey = new BigInteger(decoded);
-      _publicKey = new PublicKey(EcTools.multiply(Parameters.G, _privateKey).getEncoded());
+      Point Q = EcTools.multiply(Parameters.G, _privateKey);
+      if (compressed) {
+         // Convert Q to a compressed point on the curve
+         Q = new Point(Q.getCurve(), Q.getX(), Q.getY(), true);
+      }
+      _publicKey = new PublicKey(Q.getEncoded());
    }
 
    @Override
@@ -183,6 +246,14 @@ public class InMemoryPrivateKey extends PrivateKey implements KeyExporter, Seria
 
    @Override
    public String getBase58EncodedPrivateKey(NetworkParameters network) {
+      if (getPublicKey().isCompressed()) {
+         return getBase58EncodedPrivateKeyCompressed(network);
+      } else {
+         return getBase58EncodedPrivateKeyUncompressed(network);
+      }
+   }
+
+   private String getBase58EncodedPrivateKeyUncompressed(NetworkParameters network) {
       byte[] toEncode = new byte[1 + 32 + 4];
       // Set network
       toEncode[0] = network.isProdnet() ? (byte) 0x80 : (byte) 0xEF;
@@ -192,6 +263,22 @@ public class InMemoryPrivateKey extends PrivateKey implements KeyExporter, Seria
       // Set checksum
       byte[] checkSum = HashUtils.doubleSha256(toEncode, 0, 1 + 32);
       System.arraycopy(checkSum, 0, toEncode, 1 + 32, 4);
+      // Encode
+      return Base58.encode(toEncode);
+   }
+
+   private String getBase58EncodedPrivateKeyCompressed(NetworkParameters network) {
+      byte[] toEncode = new byte[1 + 32 + 1 + 4];
+      // Set network
+      toEncode[0] = network.isProdnet() ? (byte) 0x80 : (byte) 0xEF;
+      // Set key bytes
+      byte[] keyBytes = getPrivateKeyBytes();
+      System.arraycopy(keyBytes, 0, toEncode, 1, keyBytes.length);
+      // Set compressed indicator
+      toEncode[33] = 0x01;
+      // Set checksum
+      byte[] checkSum = HashUtils.doubleSha256(toEncode, 0, 1 + 32 + 1);
+      System.arraycopy(checkSum, 0, toEncode, 1 + 32 + 1, 4);
       // Encode
       return Base58.encode(toEncode);
    }

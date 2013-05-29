@@ -1,8 +1,11 @@
 package com.bccapi.bitlib.model;
 
+import java.io.Serializable;
+
 import com.bccapi.bitlib.util.HashUtils;
 
-public class ScriptOutputPubkey extends ScriptOutput {
+public class ScriptOutputPubkey extends ScriptOutput implements Serializable {
+   private static final long serialVersionUID = 1L;
 
    private byte[] _publicKeyBytes;
 

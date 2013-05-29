@@ -1,10 +1,12 @@
 package com.bccapi.bitlib.model;
 
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
 import com.bccapi.bitlib.util.HashUtils;
 
-public class ScriptOutputMsg extends ScriptOutput {
+public class ScriptOutputMsg extends ScriptOutput implements Serializable {
+   private static final long serialVersionUID = 1L;
 
    private byte[] _messageBytes;
    private byte[] _publicKeyBytes;

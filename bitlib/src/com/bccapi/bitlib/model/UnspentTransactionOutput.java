@@ -1,12 +1,15 @@
 package com.bccapi.bitlib.model;
 
+import java.io.Serializable;
+
 import com.bccapi.bitlib.model.Script.ScriptParsingException;
 import com.bccapi.bitlib.util.ByteReader;
 import com.bccapi.bitlib.util.ByteReader.InsufficientBytesException;
 import com.bccapi.bitlib.util.ByteWriter;
 
-public class UnspentTransactionOutput {
-
+public class UnspentTransactionOutput implements Serializable {
+   private static final long serialVersionUID = 1L;
+   
    public OutPoint outPoint;
    public int height;
    public long value;
