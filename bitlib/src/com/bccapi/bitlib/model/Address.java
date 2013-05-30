@@ -192,4 +192,11 @@ public class Address implements Serializable {
       }
       return BitUtils.areEqual(_bytes, ((Address) obj)._bytes);
    }
+   
+   public static Address getNullAddress(NetworkParameters network) {
+      byte[] bytes = new byte[21];
+      bytes[0] = (byte) (network.getStandardAddressHeader() & 0xFF);
+      return new Address(bytes);
+   }
+
 }
