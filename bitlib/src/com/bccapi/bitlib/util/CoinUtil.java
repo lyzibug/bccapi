@@ -25,7 +25,60 @@ import java.math.BigInteger;
  */
 public class CoinUtil {
 
-   private static final BigDecimal ONE_BTC_IN_SATOSHIS = new BigDecimal(100000000);
+   private static final BigDecimal BTC_IN_SATOSHIS = new BigDecimal(100000000);
+   private static final BigDecimal mBTC_IN_SATOSHIS = new BigDecimal(100000);
+   private static final BigDecimal uBTC_IN_SATOSHIS = new BigDecimal(100);
+
+   public enum Denomination {
+      BTC(8, "BTC", "BTC", BTC_IN_SATOSHIS), mBTC(5, "mBTC", "mBTC", mBTC_IN_SATOSHIS), uBTC(2, "uBTC",
+            "\u00B5BTC", uBTC_IN_SATOSHIS);
+
+      private final int _decimalPlaces;
+      private final String _asciiString;
+      private final String _unicodeString;
+      private final BigDecimal _oneUnitInSatoshis;
+
+      private Denomination(int decimalPlaces, String asciiString, String unicodeString, BigDecimal oneUnitInSatoshis) {
+         _decimalPlaces = decimalPlaces;
+         _asciiString = asciiString;
+         _unicodeString = unicodeString;
+         _oneUnitInSatoshis = oneUnitInSatoshis;
+      }
+
+      public int getDecimalPlaces() {
+         return _decimalPlaces;
+      }
+
+      public String getAsciiName() {
+         return _asciiString;
+      }
+
+      public String getUnicodeName() {
+         return _unicodeString;
+      }
+
+      public BigDecimal getOneUnitInSatoshis() {
+         return _oneUnitInSatoshis;
+      }
+
+      @Override
+      public String toString() {
+         return _asciiString;
+      }
+
+      public static Denomination fromString(String string) {
+         if (string.equals("BTC")) {
+            return BTC;
+         } else if (string.equals("mBTC")) {
+            return mBTC;
+         } else if (string.equals("uBTC")) {
+            return uBTC;
+         } else {
+            return BTC;
+         }
+      }
+
+   };
 
    /**
     * Number of satoshis in a Bitcoin.
@@ -33,10 +86,11 @@ public class CoinUtil {
    public static final BigInteger BTC = new BigInteger("100000000", 10);
 
    /**
-    * Get the given value in satoshis as a string on the form "10.12345".
+    * Get the given value in satoshis as a string on the form "10.12345"
+    * denominated in BTC.
     * <p>
     * This method only returns necessary decimal points to tell the exact value.
-    * If you wish to have all 8 digits use
+    * If you wish to display all digits use
     * {@link CoinUtil#fullValueString(long)}
     * 
     * @param value
@@ -44,13 +98,32 @@ public class CoinUtil {
     * @return The given value in satoshis as a string on the form "10.12345".
     */
    public static String valueString(long value) {
+      return valueString(value, Denomination.BTC);
+   }
+
+   /**
+    * Get the given value in satoshis as a string on the form "10.12345" using
+    * the specified denomination.
+    * <p>
+    * This method only returns necessary decimal points to tell the exact value.
+    * If you wish to display all digits use
+    * {@link CoinUtil#fullValueString(long, Denomination)}
+    * 
+    * @param value
+    *           The number of satoshis
+    * @param denomination
+    *           The denomination to use
+    * @return The given value in satoshis as a string on the form "10.12345".
+    */
+   public static String valueString(long value, Denomination denomination) {
       BigDecimal d = BigDecimal.valueOf(value);
-      d = d.divide(ONE_BTC_IN_SATOSHIS);
+      d = d.divide(denomination.getOneUnitInSatoshis());
       return d.toPlainString();
    }
 
    /**
-    * Get the given value in satoshis as a string on the form "10.12345000".
+    * Get the given value in satoshis as a string on the form "10.12345000"
+    * denominated in BTC.
     * <p>
     * This method always returns a string with 8 decimal points. If you only
     * wish to have the necessary digits use {@link CoinUtil#valueString(long)}
@@ -60,8 +133,26 @@ public class CoinUtil {
     * @return The given value in satoshis as a string on the form "10.12345000".
     */
    public static String fullValueString(long value) {
+      return fullValueString(value, Denomination.BTC);
+   }
+
+   /**
+    * Get the given value in satoshis as a string on the form "10.12345000"
+    * using the specified denomination.
+    * <p>
+    * This method always returns a string with all decimal points. If you only
+    * wish to have the necessary digits use
+    * {@link CoinUtil#valueString(long, Denomination)}
+    * 
+    * @param value
+    *           The number of satoshis
+    * @param denomination
+    *           The denomination to use
+    * @return The given value in satoshis as a string on the form "10.12345000".
+    */
+   public static String fullValueString(long value, Denomination denomination) {
       BigDecimal d = BigDecimal.valueOf(value);
-      d = d.movePointLeft(8);
+      d = d.movePointLeft(denomination.getDecimalPlaces());
       return d.toPlainString();
    }
 
